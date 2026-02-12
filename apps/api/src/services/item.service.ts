@@ -4,6 +4,9 @@ import { generateId } from "../lib/id.js";
 import { logActivity } from "../lib/activity.js";
 import { NotFoundError } from "../lib/errors.js";
 import { checkWorkspaceAccess } from "./workspace.service.js";
+import { eventBus } from "../lib/event-bus.js";
+
+type MutationOptions = { emitEvents?: boolean };
 
 async function getBoardWithAccess(boardId: string, userId: string) {
   const [board] = await db.select().from(boards).where(eq(boards.id, boardId));
@@ -47,7 +50,8 @@ export async function createItem(
     columnValues?: Record<string, unknown>;
     parentItemId?: string;
   },
-  userId: string
+  userId: string,
+  options?: MutationOptions
 ) {
   const board = await getBoardWithAccess(data.boardId, userId);
 
@@ -80,6 +84,17 @@ export async function createItem(
     actorId: userId,
     changes: { description: `Created item '${data.name}'` },
   });
+
+  if (options?.emitEvents !== false) {
+    eventBus.emit({
+      type: "item_created",
+      boardId: data.boardId,
+      itemId,
+      groupId: data.groupId,
+      actorId: userId,
+      columnValues: data.columnValues ?? {},
+    });
+  }
 
   const [item] = await db.select().from(items).where(eq(items.id, itemId));
   return item;
@@ -114,7 +129,8 @@ export async function updateItem(
     groupId?: string;
     columnValues?: Record<string, unknown>;
     position?: number;
-  }
+  },
+  options?: MutationOptions
 ) {
   const [item] = await db.select().from(items).where(eq(items.id, id));
   if (!item) throw new NotFoundError("Item", id);
@@ -147,6 +163,18 @@ export async function updateItem(
           actorId: userId,
           changes: { field: colId, oldValue, newValue },
         });
+
+        if (options?.emitEvents !== false) {
+          eventBus.emit({
+            type: "column_value_changed",
+            boardId: item.boardId,
+            itemId: id,
+            actorId: userId,
+            columnId: colId,
+            oldValue,
+            newValue,
+          });
+        }
       }
     }
   }
@@ -160,13 +188,43 @@ export async function updateItem(
       actorId: userId,
       changes: { field: "name", oldValue: item.name, newValue: data.name },
     });
+
+    if (options?.emitEvents !== false) {
+      eventBus.emit({
+        type: "item_updated",
+        boardId: item.boardId,
+        itemId: id,
+        actorId: userId,
+        field: "name",
+        oldValue: item.name,
+        newValue: data.name,
+      });
+    }
+  }
+
+  if (data.groupId && data.groupId !== item.groupId) {
+    if (options?.emitEvents !== false) {
+      eventBus.emit({
+        type: "item_updated",
+        boardId: item.boardId,
+        itemId: id,
+        actorId: userId,
+        field: "groupId",
+        oldValue: item.groupId,
+        newValue: data.groupId,
+      });
+    }
   }
 
   const [updated] = await db.select().from(items).where(eq(items.id, id));
   return updated;
 }
 
-export async function deleteItem(id: string, userId: string) {
+export async function deleteItem(
+  id: string,
+  userId: string,
+  options?: MutationOptions
+) {
   const [item] = await db.select().from(items).where(eq(items.id, id));
   if (!item) throw new NotFoundError("Item", id);
 
@@ -182,6 +240,15 @@ export async function deleteItem(id: string, userId: string) {
     actorId: userId,
     changes: { description: `Deleted item '${item.name}'` },
   });
+
+  if (options?.emitEvents !== false) {
+    eventBus.emit({
+      type: "item_deleted",
+      boardId: item.boardId,
+      itemId: id,
+      actorId: userId,
+    });
+  }
 }
 
 export async function addItemUpdate(

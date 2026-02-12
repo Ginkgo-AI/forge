@@ -6,6 +6,7 @@ import { boardRoutes } from "./routes/boards.js";
 import { itemRoutes } from "./routes/items.js";
 import { userRoutes } from "./routes/users.js";
 import { agentRoutes } from "./routes/agents.js";
+import { automationRoutes } from "./routes/automations.js";
 import { aiRoutes } from "./routes/ai.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -35,6 +36,7 @@ api.route("/boards", boardRoutes);
 api.route("/items", itemRoutes);
 api.route("/users", userRoutes);
 api.route("/agents", agentRoutes);
+api.route("/automations", automationRoutes);
 api.route("/ai", aiRoutes);
 
 app.route("/api/v1", api);

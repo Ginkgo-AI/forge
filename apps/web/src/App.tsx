@@ -4,6 +4,7 @@ import { AppLayout } from "./components/layout/AppLayout.tsx";
 import { BoardPage } from "./pages/BoardPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { AgentsPage } from "./pages/AgentsPage.tsx";
+import { AutomationsPage } from "./pages/AutomationsPage.tsx";
 import { useWorkspaces } from "./hooks/useWorkspaces.ts";
 import { useWorkspaceStore } from "./stores/workspace.ts";
 import { api } from "./lib/api.ts";
@@ -40,6 +41,7 @@ export function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/boards/:boardId" element={<BoardPage />} />
+        <Route path="/boards/:boardId/automations" element={<AutomationsPage />} />
         <Route path="/agents" element={<AgentsPage />} />
       </Route>
     </Routes>

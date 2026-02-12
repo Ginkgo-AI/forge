@@ -136,8 +136,49 @@ export const api = {
   // Agents
   listAgents: (workspaceId: string) =>
     request(`/agents?workspaceId=${workspaceId}`),
-  triggerAgent: (id: string) =>
-    request(`/agents/${id}/run`, { method: "POST" }),
+  getAgent: (id: string) => request(`/agents/${id}`),
+  createAgent: (data: {
+    workspaceId: string;
+    name: string;
+    description?: string;
+    systemPrompt: string;
+    tools: string[];
+    triggers: Array<{ type: string; config: Record<string, unknown> }>;
+    guardrails?: {
+      requireApproval: boolean;
+      maxActionsPerRun: number;
+      allowedBoardIds?: string[];
+      blockedTools?: string[];
+    };
+  }) => request("/agents", { method: "POST", body: JSON.stringify(data) }),
+  updateAgent: (id: string, data: Record<string, unknown>) =>
+    request(`/agents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteAgent: (id: string) =>
+    request(`/agents/${id}`, { method: "DELETE" }),
+  triggerAgent: (id: string, prompt?: string) =>
+    request(`/agents/${id}/run`, {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+    }),
+
+  // Automations
+  listAutomations: (boardId: string) =>
+    request(`/automations?boardId=${boardId}`),
+  getAutomation: (id: string) => request(`/automations/${id}`),
+  createAutomation: (data: {
+    boardId: string;
+    name: string;
+    description?: string;
+    trigger: { type: string; config: Record<string, unknown> };
+    conditions?: Array<{ columnId: string; operator: string; value: unknown }>;
+    actions: Array<{ type: string; config: Record<string, unknown> }>;
+  }) => request("/automations", { method: "POST", body: JSON.stringify(data) }),
+  updateAutomation: (id: string, data: Record<string, unknown>) =>
+    request(`/automations/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteAutomation: (id: string) =>
+    request(`/automations/${id}`, { method: "DELETE" }),
+  triggerAutomation: (id: string) =>
+    request(`/automations/${id}/trigger`, { method: "POST" }),
 
   // AI
   chatStream,
