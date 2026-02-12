@@ -29,6 +29,14 @@ workspaceRoutes.post(
   }
 );
 
+// List workspace members
+workspaceRoutes.get("/:id/members", async (c) => {
+  const userId = c.get("userId");
+  const id = c.req.param("id");
+  const members = await workspaceService.listWorkspaceMembers(id, userId);
+  return c.json({ data: members, total: members.length });
+});
+
 // Get workspace by ID
 workspaceRoutes.get("/:id", async (c) => {
   const userId = c.get("userId");

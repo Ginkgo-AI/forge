@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api.ts";
 import type { Board } from "@forge/shared";
 
@@ -51,6 +52,18 @@ export function useCreateBoard() {
     }) => api.createBoard(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+}
+
+export function useDeleteBoard() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation<unknown, Error, { id: string }>({
+    mutationFn: ({ id }) => api.deleteBoard(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      navigate("/dashboard");
     },
   });
 }

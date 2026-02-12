@@ -33,13 +33,24 @@ export const api = {
   getBoard: (id: string) => request(`/boards/${id}`),
   createBoard: (data: { name: string; workspaceId: string; description?: string }) =>
     request("/boards", { method: "POST", body: JSON.stringify(data) }),
+  deleteBoard: (id: string) =>
+    request(`/boards/${id}`, { method: "DELETE" }),
+
+  // Members
+  listMembers: (workspaceId: string) =>
+    request(`/workspaces/${workspaceId}/members`),
 
   // Items
   listItems: (boardId: string) => request(`/items?boardId=${boardId}`),
+  getItem: (id: string) => request(`/items/${id}`),
   createItem: (data: { boardId: string; groupId: string; name: string }) =>
     request("/items", { method: "POST", body: JSON.stringify(data) }),
   updateItem: (id: string, data: Record<string, unknown>) =>
     request(`/items/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteItem: (id: string) =>
+    request(`/items/${id}`, { method: "DELETE" }),
+  addItemUpdate: (itemId: string, data: { body: string }) =>
+    request(`/items/${itemId}/updates`, { method: "POST", body: JSON.stringify(data) }),
 
   // Agents
   listAgents: (workspaceId: string) =>

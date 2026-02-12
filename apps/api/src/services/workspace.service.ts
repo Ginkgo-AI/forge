@@ -92,6 +92,30 @@ export async function deleteWorkspace(id: string, userId: string) {
   await db.delete(workspaces).where(eq(workspaces.id, id));
 }
 
+export async function listWorkspaceMembers(workspaceId: string, userId: string) {
+  await checkWorkspaceAccess(workspaceId, userId);
+
+  const rows = await db
+    .select({
+      id: workspaceMembers.id,
+      workspaceId: workspaceMembers.workspaceId,
+      userId: workspaceMembers.userId,
+      role: workspaceMembers.role,
+      joinedAt: workspaceMembers.joinedAt,
+      user: {
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        avatarUrl: users.avatarUrl,
+      },
+    })
+    .from(workspaceMembers)
+    .innerJoin(users, eq(workspaceMembers.userId, users.id))
+    .where(eq(workspaceMembers.workspaceId, workspaceId));
+
+  return rows;
+}
+
 export async function checkWorkspaceAccess(
   workspaceId: string,
   userId: string
