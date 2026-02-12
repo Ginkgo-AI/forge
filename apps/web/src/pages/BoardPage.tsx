@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useBoard } from "../hooks/useBoards.ts";
 import { useItems, useCreateItem, useDeleteItem } from "../hooks/useItems.ts";
+import { useWorkspaceStore } from "../stores/workspace.ts";
 import { CellEditor } from "../components/board/CellEditor.tsx";
 import { ItemDetailPanel } from "../components/board/ItemDetailPanel.tsx";
 import { KanbanView } from "../components/board/KanbanView.tsx";
@@ -37,6 +38,13 @@ export function BoardPage() {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [itemMenuId, setItemMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const setCurrentBoardId = useWorkspaceStore((s) => s.setCurrentBoardId);
+
+  // Sync boardId to workspace store for AI chat context
+  useEffect(() => {
+    setCurrentBoardId(boardId ?? null);
+    return () => setCurrentBoardId(null);
+  }, [boardId, setCurrentBoardId]);
 
   const board = boardData?.data;
   const allItems = itemsData?.data ?? [];

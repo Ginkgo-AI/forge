@@ -21,6 +21,87 @@ async function request<T>(
   return res.json();
 }
 
+export type ChatSSEEvent =
+  | { type: "text_delta"; content: string }
+  | { type: "tool_call_start"; toolName: string; toolCallId: string }
+  | { type: "tool_call_result"; toolCallId: string; toolName: string; result: unknown }
+  | { type: "done"; conversationId: string; toolCalls: unknown[] }
+  | { type: "error"; error: string };
+
+async function chatStream(
+  data: {
+    message: string;
+    workspaceId: string;
+    conversationId?: string;
+    boardId?: string;
+    itemId?: string;
+    providerId?: string;
+    model?: string;
+  },
+  onEvent: (event: ChatSSEEvent) => void
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/ai/chat`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(error.error || "Request failed");
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("No response body");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // Parse SSE lines
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        const jsonStr = line.slice(5).trim();
+        if (jsonStr) {
+          try {
+            const event = JSON.parse(jsonStr) as ChatSSEEvent;
+            onEvent(event);
+          } catch {
+            // Skip malformed JSON
+          }
+        }
+      }
+    }
+  }
+
+  // Process any remaining buffer
+  if (buffer.trim()) {
+    const lines = buffer.split("\n");
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        const jsonStr = line.slice(5).trim();
+        if (jsonStr) {
+          try {
+            const event = JSON.parse(jsonStr) as ChatSSEEvent;
+            onEvent(event);
+          } catch {
+            // Skip malformed JSON
+          }
+        }
+      }
+    }
+  }
+}
+
 export const api = {
   // Workspaces
   listWorkspaces: () => request("/workspaces"),
@@ -59,10 +140,26 @@ export const api = {
     request(`/agents/${id}/run`, { method: "POST" }),
 
   // AI
+  chatStream,
   chat: (data: { message: string; context?: Record<string, string>; conversationId?: string }) =>
     request("/ai/chat", { method: "POST", body: JSON.stringify(data) }),
-  generateBoard: (data: { description: string; workspaceId: string }) =>
+  generateBoard: (data: { description: string; workspaceId: string; providerId?: string; model?: string }) =>
     request("/ai/generate-board", { method: "POST", body: JSON.stringify(data) }),
-  extractItems: (data: { text: string; boardId: string }) =>
+  extractItems: (data: { text: string; boardId: string; providerId?: string; model?: string }) =>
     request("/ai/extract-items", { method: "POST", body: JSON.stringify(data) }),
+  getProviders: () => request<{ data: ProviderInfo[] }>("/ai/providers"),
+};
+
+export type ProviderModel = {
+  id: string;
+  displayName: string;
+  maxTokens: number;
+};
+
+export type ProviderInfo = {
+  providerId: string;
+  displayName: string;
+  models: ProviderModel[];
+  defaultModel: string;
+  isDefault: boolean;
 };
