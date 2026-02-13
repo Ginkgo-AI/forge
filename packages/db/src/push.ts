@@ -249,6 +249,20 @@ async function push() {
       executed_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     );
 
+    -- Documents
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      title VARCHAR(500) NOT NULL,
+      content TEXT NOT NULL DEFAULT '',
+      created_by_id TEXT NOT NULL,
+      parent_doc_id TEXT,
+      position INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS documents_workspace_idx ON documents(workspace_id);
+
     -- Activity Log
     CREATE TABLE IF NOT EXISTS activity_log (
       id TEXT PRIMARY KEY,

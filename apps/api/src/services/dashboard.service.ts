@@ -159,7 +159,7 @@ export async function getActivityTimeline(
       COUNT(*)::int AS count
     FROM activity_log
     WHERE workspace_id = ${workspaceId}
-      AND created_at >= ${startDate}
+      AND created_at >= ${startDate.toISOString()}
     GROUP BY date_trunc('day', created_at)
     ORDER BY date ASC
   `);
