@@ -10,6 +10,8 @@ import { useWorkspaces } from "./hooks/useWorkspaces.ts";
 import { useWorkspaceStore } from "./stores/workspace.ts";
 import { authClient } from "./lib/auth-client.ts";
 import { api } from "./lib/api.ts";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
+import { Toaster } from "./components/ui/Toaster.tsx";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -65,22 +67,25 @@ export function App() {
   }, [setCurrentUser]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<LoginPage />} />
-      <Route
-        element={
-          <AuthGuard>
-            <AppLayout />
-          </AuthGuard>
-        }
-      >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/boards/:boardId" element={<BoardPage />} />
-        <Route path="/boards/:boardId/automations" element={<AutomationsPage />} />
-        <Route path="/agents" element={<AgentsPage />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<LoginPage />} />
+        <Route
+          element={
+            <AuthGuard>
+              <AppLayout />
+            </AuthGuard>
+          }
+        >
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/boards/:boardId" element={<BoardPage />} />
+          <Route path="/boards/:boardId/automations" element={<AutomationsPage />} />
+          <Route path="/agents" element={<AgentsPage />} />
+        </Route>
+      </Routes>
+      <Toaster />
+    </ErrorBoundary>
   );
 }
