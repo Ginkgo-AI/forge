@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar.tsx";
 import { AIChatPanel } from "./AIChatPanel.tsx";
+import { TourOverlay } from "../tour/TourOverlay.tsx";
 import { MessageSquare, X, Menu } from "lucide-react";
 import { Breadcrumbs } from "./Breadcrumbs.tsx";
+import { useTourStore } from "../../stores/tour.ts";
+import { welcomeTourSteps } from "../../tour/welcomeTour.ts";
+import { useWorkspaceStore } from "../../stores/workspace.ts";
 
 export function AppLayout() {
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const currentWorkspace = useWorkspaceStore((s) => s.currentWorkspace);
+  const { startTour, completedTours, isActive: tourActive } = useTourStore();
+
+  useEffect(() => {
+    if (!currentWorkspace || completedTours.includes("welcome") || tourActive) return;
+    const timer = setTimeout(() => {
+      startTour(welcomeTourSteps, "welcome");
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [currentWorkspace, completedTours, tourActive, startTour]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -42,6 +56,7 @@ export function AppLayout() {
             <Breadcrumbs />
           </div>
           <button
+            data-tour="ai-chat-button"
             onClick={() => setChatOpen(!chatOpen)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm bg-forge-accent hover:bg-forge-accent-hover text-white transition-colors"
           >
@@ -64,6 +79,7 @@ export function AppLayout() {
           )}
         </div>
       </main>
+      <TourOverlay />
     </div>
   );
 }

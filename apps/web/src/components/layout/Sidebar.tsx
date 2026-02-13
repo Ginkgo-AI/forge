@@ -11,9 +11,12 @@ import {
   MoreHorizontal,
   Trash2,
   FileText,
+  HelpCircle,
 } from "lucide-react";
 import { useBoards, useDeleteBoard } from "../../hooks/useBoards.ts";
 import { useWorkspaceStore } from "../../stores/workspace.ts";
+import { useTourStore } from "../../stores/tour.ts";
+import { welcomeTourSteps } from "../../tour/welcomeTour.ts";
 import { CreateBoardModal } from "../boards/CreateBoardModal.tsx";
 import { ConfirmDialog } from "../ui/ConfirmDialog.tsx";
 
@@ -38,12 +41,21 @@ export function Sidebar({ onClose }: SidebarProps) {
   const [deleteBoardId, setDeleteBoardId] = useState<string | null>(null);
   const [boardMenuId, setBoardMenuId] = useState<string | null>(null);
 
+  const startTour = useTourStore((s) => s.startTour);
+
   return (
-    <aside className="w-60 bg-forge-surface border-r border-forge-border flex flex-col shrink-0">
+    <aside data-tour="sidebar" className="w-60 bg-forge-surface border-r border-forge-border flex flex-col shrink-0">
       {/* Logo */}
       <div className="h-12 flex items-center px-4 border-b border-forge-border">
         <span className="text-lg font-bold text-forge-accent">Forge</span>
         <span className="text-xs text-forge-text-muted ml-2 mt-0.5">AI Work Platform</span>
+        <button
+          onClick={() => startTour(welcomeTourSteps)}
+          className="ml-auto p-1 rounded hover:bg-forge-surface-hover transition-colors"
+          title="Take a tour"
+        >
+          <HelpCircle size={16} className="text-forge-text-muted" />
+        </button>
       </div>
 
       {/* Workspace selector */}
@@ -60,11 +72,18 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {navigation.map((item) => {
           const active = location.pathname === item.href;
+          const tourId =
+            item.name === "Agents"
+              ? "sidebar-agents"
+              : item.name === "Docs"
+                ? "sidebar-docs"
+                : undefined;
           return (
             <Link
               key={item.name}
               to={item.href}
               onClick={onClose}
+              data-tour={tourId}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                 active
                   ? "bg-forge-accent/15 text-forge-accent"
@@ -78,7 +97,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         })}
 
         {/* Boards section */}
-        <div className="pt-4">
+        <div className="pt-4" data-tour="sidebar-boards">
           <div className="flex items-center justify-between px-3 mb-2">
             <span className="text-xs font-medium text-forge-text-muted uppercase tracking-wider">
               Boards
@@ -151,6 +170,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <Link
           to="/settings"
           onClick={onClose}
+          data-tour="sidebar-settings"
           className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-forge-text-muted hover:bg-forge-surface-hover hover:text-forge-text transition-colors"
         >
           <Settings size={18} />

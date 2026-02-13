@@ -36,7 +36,9 @@ export function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <StatsGrid stats={statsData?.data} isLoading={statsLoading} />
+      <div data-tour="dashboard-stats">
+        <StatsGrid stats={statsData?.data} isLoading={statsLoading} />
+      </div>
 
       {/* Charts + Activity feed two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
