@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar.tsx";
 import { AIChatPanel } from "./AIChatPanel.tsx";
 import { MessageSquare, X, Menu } from "lucide-react";
+import { Breadcrumbs } from "./Breadcrumbs.tsx";
 
 export function AppLayout() {
   const [chatOpen, setChatOpen] = useState(false);
@@ -38,9 +39,7 @@ export function AppLayout() {
             >
               <Menu size={18} className="text-forge-text-muted" />
             </button>
-            <div className="text-sm text-forge-text-muted">
-              {/* Breadcrumb will go here */}
-            </div>
+            <Breadcrumbs />
           </div>
           <button
             onClick={() => setChatOpen(!chatOpen)}
