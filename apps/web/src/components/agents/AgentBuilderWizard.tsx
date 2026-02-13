@@ -13,21 +13,6 @@ import {
 import { useWorkspaceStore } from "../../stores/workspace.ts";
 import { useCreateAgent, useGenerateAgent } from "../../hooks/useAgents.ts";
 
-const AVAILABLE_TOOLS = [
-    { id: "list_boards", label: "List Boards" },
-    { id: "get_board", label: "Get Board" },
-    { id: "create_board", label: "Create Board" },
-    { id: "add_column", label: "Add Column" },
-    { id: "add_group", label: "Add Group" },
-    { id: "list_items", label: "List Items" },
-    { id: "get_item", label: "Get Item" },
-    { id: "create_item", label: "Create Item" },
-    { id: "update_item", label: "Update Item" },
-    { id: "delete_item", label: "Delete Item" },
-    { id: "add_item_update", label: "Add Update" },
-    { id: "list_workspace_members", label: "List Members" },
-];
-
 const STEPS = ["Describe", "Review & Edit", "Create"] as const;
 
 const LOADING_MESSAGES = [
@@ -37,6 +22,8 @@ const LOADING_MESSAGES = [
     "Tuning guardrails…",
     "Polishing the config…",
 ];
+
+type ToolInfo = { id: string; label: string };
 
 type AgentConfig = {
     name: string;
@@ -65,6 +52,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
     const [prompt, setPrompt] = useState("");
     const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
     const [draftConfig, setDraftConfig] = useState<AgentConfig | null>(null);
+    const [availableTools, setAvailableTools] = useState<ToolInfo[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     // Cycle loading messages while generating
@@ -83,6 +71,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
             setStep(0);
             setPrompt("");
             setDraftConfig(null);
+            setAvailableTools([]);
             setError(null);
             generateAgent.reset();
         }
@@ -106,6 +95,9 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
             {
                 onSuccess: (res) => {
                     setDraftConfig(res.data.agentConfig);
+                    if (res.data.availableTools) {
+                        setAvailableTools(res.data.availableTools);
+                    }
                     setStep(1);
                 },
                 onError: (err) => {
@@ -185,18 +177,15 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
         >
             <div
                 className="bg-forge-surface border border-forge-border rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden"
-                style={{
-                    animation: "wizard-enter 0.25s ease-out",
-                }}
+                style={{ animation: "wizard-enter 0.25s ease-out" }}
             >
                 {/* Header */}
                 <div className="relative px-6 pt-5 pb-4 border-b border-forge-border">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                style={{
-                                    background: "linear-gradient(135deg, #8b5cf6, #6366f1, #3b82f6)",
-                                }}
+                            <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                style={{ background: "linear-gradient(135deg, #8b5cf6, #6366f1, #3b82f6)" }}
                             >
                                 <Wand2 size={16} className="text-white" />
                             </div>
@@ -224,19 +213,14 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                             }`}
                                         style={
                                             i === step
-                                                ? {
-                                                    background:
-                                                        "linear-gradient(135deg, #8b5cf6, #6366f1)",
-                                                }
+                                                ? { background: "linear-gradient(135deg, #8b5cf6, #6366f1)" }
                                                 : undefined
                                         }
                                     >
                                         {i < step ? <Check size={14} /> : i + 1}
                                     </div>
                                     <span
-                                        className={`text-xs font-medium truncate transition-colors ${i <= step
-                                                ? "text-forge-text"
-                                                : "text-forge-text-muted"
+                                        className={`text-xs font-medium truncate transition-colors ${i <= step ? "text-forge-text" : "text-forge-text-muted"
                                             }`}
                                     >
                                         {label}
@@ -260,10 +244,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                         <div className="space-y-4">
                             <div>
                                 <h3 className="text-base font-semibold flex items-center gap-2 mb-1">
-                                    <Sparkles
-                                        size={18}
-                                        className="text-purple-400"
-                                    />
+                                    <Sparkles size={18} className="text-purple-400" />
                                     Describe your agent
                                 </h3>
                                 <p className="text-sm text-forge-text-muted">
@@ -283,9 +264,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
 
                             {/* Example chips */}
                             <div className="space-y-2">
-                                <p className="text-xs text-forge-text-muted font-medium">
-                                    Try an example:
-                                </p>
+                                <p className="text-xs text-forge-text-muted font-medium">Try an example:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {[
                                         "Triage new bug reports and assign priority",
@@ -315,11 +294,8 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                     {/* Step 1: Review & Edit */}
                     {step === 1 && draftConfig && (
                         <div className="space-y-4">
-                            {/* Name */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    Name
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">Name</label>
                                 <input
                                     value={draftConfig.name}
                                     onChange={(e) => updateDraft("name", e.target.value)}
@@ -327,11 +303,8 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 />
                             </div>
 
-                            {/* Description */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    Description
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">Description</label>
                                 <input
                                     value={draftConfig.description}
                                     onChange={(e) => updateDraft("description", e.target.value)}
@@ -339,11 +312,8 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 />
                             </div>
 
-                            {/* System Prompt */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    System Prompt
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">System Prompt</label>
                                 <textarea
                                     value={draftConfig.systemPrompt}
                                     onChange={(e) => updateDraft("systemPrompt", e.target.value)}
@@ -352,13 +322,10 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 />
                             </div>
 
-                            {/* Tools */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    Tools
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">Tools</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {AVAILABLE_TOOLS.map((tool) => (
+                                    {availableTools.map((tool) => (
                                         <button
                                             key={tool.id}
                                             type="button"
@@ -374,11 +341,8 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 </div>
                             </div>
 
-                            {/* Trigger */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    Trigger
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">Trigger</label>
                                 <div className="flex gap-2">
                                     {(["manual", "event"] as const).map((type) => (
                                         <button
@@ -397,30 +361,20 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 {draftConfig.triggerType === "event" && (
                                     <select
                                         value={draftConfig.eventType || ""}
-                                        onChange={(e) =>
-                                            updateDraft(
-                                                "eventType",
-                                                e.target.value || undefined
-                                            )
-                                        }
+                                        onChange={(e) => updateDraft("eventType", e.target.value || undefined)}
                                         className="mt-2 w-full bg-forge-surface border border-forge-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-forge-accent"
                                     >
                                         <option value="">Any event</option>
                                         <option value="item_created">Item Created</option>
                                         <option value="item_updated">Item Updated</option>
-                                        <option value="column_value_changed">
-                                            Column Value Changed
-                                        </option>
+                                        <option value="column_value_changed">Column Value Changed</option>
                                         <option value="item_deleted">Item Deleted</option>
                                     </select>
                                 )}
                             </div>
 
-                            {/* Guardrails */}
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">
-                                    Guardrails
-                                </label>
+                                <label className="block text-sm font-medium mb-1.5">Guardrails</label>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 text-sm">
                                         <input
@@ -437,9 +391,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                         Require approval before actions
                                     </label>
                                     <div className="flex items-center gap-2">
-                                        <label className="text-sm text-forge-text-muted">
-                                            Max actions per run:
-                                        </label>
+                                        <label className="text-sm text-forge-text-muted">Max actions per run:</label>
                                         <input
                                             type="number"
                                             value={draftConfig.guardrails.maxActionsPerRun}
@@ -450,7 +402,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                                 })
                                             }
                                             min={1}
-                                            max={100}
+                                            max={50}
                                             className="w-20 bg-transparent border border-forge-border rounded-md px-2 py-1 text-sm focus:outline-none focus:border-forge-accent"
                                         />
                                     </div>
@@ -471,16 +423,11 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                             <div className="text-center py-2">
                                 <div
                                     className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-3"
-                                    style={{
-                                        background:
-                                            "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))",
-                                    }}
+                                    style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.15))" }}
                                 >
                                     <Sparkles size={24} className="text-purple-400" />
                                 </div>
-                                <h3 className="text-base font-semibold">
-                                    Ready to create your agent
-                                </h3>
+                                <h3 className="text-base font-semibold">Ready to create your agent</h3>
                                 <p className="text-sm text-forge-text-muted mt-1">
                                     Review the summary below and hit Create to bring it to life.
                                 </p>
@@ -488,17 +435,13 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
 
                             <div className="bg-forge-surface-hover/50 rounded-lg border border-forge-border p-4 space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">
-                                        {draftConfig.name}
-                                    </span>
+                                    <span className="text-sm font-medium">{draftConfig.name}</span>
                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400">
                                         Ready
                                     </span>
                                 </div>
                                 {draftConfig.description && (
-                                    <p className="text-sm text-forge-text-muted">
-                                        {draftConfig.description}
-                                    </p>
+                                    <p className="text-sm text-forge-text-muted">{draftConfig.description}</p>
                                 )}
                                 <div className="flex flex-wrap gap-1.5">
                                     {draftConfig.tools.map((tool) => (
@@ -512,22 +455,13 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 </div>
                                 <div className="flex items-center gap-4 text-xs text-forge-text-muted">
                                     <span>
-                                        Trigger:{" "}
-                                        <span className="text-forge-text capitalize">
-                                            {draftConfig.triggerType}
-                                        </span>
+                                        Trigger: <span className="text-forge-text capitalize">{draftConfig.triggerType}</span>
                                     </span>
                                     <span>
-                                        Approval:{" "}
-                                        <span className="text-forge-text">
-                                            {draftConfig.guardrails.requireApproval ? "Yes" : "No"}
-                                        </span>
+                                        Approval: <span className="text-forge-text">{draftConfig.guardrails.requireApproval ? "Yes" : "No"}</span>
                                     </span>
                                     <span>
-                                        Max actions:{" "}
-                                        <span className="text-forge-text">
-                                            {draftConfig.guardrails.maxActionsPerRun}
-                                        </span>
+                                        Max actions: <span className="text-forge-text">{draftConfig.guardrails.maxActionsPerRun}</span>
                                     </span>
                                 </div>
                             </div>
@@ -545,15 +479,9 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                         <div className="flex flex-col items-center justify-center py-8">
                             <div
                                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                                style={{
-                                    background:
-                                        "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.2))",
-                                }}
+                                style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.2))" }}
                             >
-                                <Loader2
-                                    size={22}
-                                    className="animate-spin text-purple-400"
-                                />
+                                <Loader2 size={22} className="animate-spin text-purple-400" />
                             </div>
                             <p className="text-sm text-forge-text-muted transition-all animate-pulse">
                                 {LOADING_MESSAGES[loadingMsgIdx]}
@@ -593,11 +521,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                         {step === 0 && (
                             <button
                                 onClick={handleGenerate}
-                                disabled={
-                                    !prompt.trim() ||
-                                    prompt.trim().length < 10 ||
-                                    generateAgent.isPending
-                                }
+                                disabled={!prompt.trim() || prompt.trim().length < 10 || generateAgent.isPending}
                                 className="flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-md text-white transition-all disabled:opacity-40"
                                 style={{
                                     background: prompt.trim().length >= 10
@@ -636,10 +560,7 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                                 onClick={handleCreate}
                                 disabled={createAgent.isPending}
                                 className="flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-md text-white transition-all"
-                                style={{
-                                    background:
-                                        "linear-gradient(135deg, #10b981, #059669)",
-                                }}
+                                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
                             >
                                 {createAgent.isPending ? (
                                     <>
@@ -658,17 +579,10 @@ export function AgentBuilderWizard({ open, onClose }: AgentBuilderWizardProps) {
                 </div>
             </div>
 
-            {/* Wizard entrance animation */}
             <style>{`
         @keyframes wizard-enter {
-          from {
-            opacity: 0;
-            transform: scale(0.96) translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
+          from { opacity: 0; transform: scale(0.96) translateY(8px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
         </div>,

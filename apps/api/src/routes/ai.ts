@@ -144,17 +144,20 @@ aiRoutes.post(
   ),
   async (c) => {
     const body = c.req.valid("json");
-    const userId = c.get("userId");
 
     const agentConfig = await aiService.generateAgentConfig(
       body.description,
       body.workspaceId,
-      userId,
       body.providerId,
       body.model
     );
 
-    return c.json({ data: { agentConfig } });
+    return c.json({
+      data: {
+        agentConfig,
+        availableTools: aiService.getAgentToolCatalog(),
+      },
+    });
   }
 );
 

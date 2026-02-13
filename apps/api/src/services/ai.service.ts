@@ -19,16 +19,16 @@ export type SSEEvent =
   | { type: "text_delta"; content: string }
   | { type: "tool_call_start"; toolName: string; toolCallId: string }
   | {
-      type: "tool_call_result";
-      toolCallId: string;
-      toolName: string;
-      result: unknown;
-    }
+    type: "tool_call_result";
+    toolCallId: string;
+    toolName: string;
+    result: unknown;
+  }
   | {
-      type: "done";
-      conversationId: string;
-      toolCalls: AgentToolCall[];
-    }
+    type: "done";
+    conversationId: string;
+    toolCalls: AgentToolCall[];
+  }
   | { type: "error"; error: string };
 
 type StreamChatParams = {
@@ -405,10 +405,9 @@ export async function extractItems(
   const columnInfo = board.columns
     .map(
       (c) =>
-        `- "${c.title}" (id: ${c.id}, type: ${c.type}${
-          c.type === "status" && c.config
-            ? `, status keys: ${Object.keys(c.config.labels || {}).join(", ")}`
-            : ""
+        `- "${c.title}" (id: ${c.id}, type: ${c.type}${c.type === "status" && c.config
+          ? `, status keys: ${Object.keys(c.config.labels || {}).join(", ")}`
+          : ""
         })`
     )
     .join("\n");
@@ -516,11 +515,14 @@ const AGENT_TOOL_CATALOG = [
 
 const VALID_TOOL_IDS = new Set(AGENT_TOOL_CATALOG.map((t) => t.id));
 
+export function getAgentToolCatalog() {
+  return AGENT_TOOL_CATALOG.map((t) => ({ id: t.id, label: t.description }));
+}
+
 // Non-streaming: Generate agent configuration from natural language
 export async function generateAgentConfig(
   description: string,
   workspaceId: string,
-  userId: string,
   providerId?: string,
   model?: string
 ) {
@@ -549,6 +551,7 @@ ${toolListStr}
 
 Respond with ONLY valid JSON. No markdown code fences, no conversational text, no explanations.
 
+Workspace ID: ${workspaceId}
 User's description: ${description}`;
 
   const { text } = await provider.complete({
@@ -595,7 +598,7 @@ User's description: ${description}`;
     requireApproval: config.guardrails?.requireApproval ?? true,
     maxActionsPerRun: Math.min(
       Math.max(config.guardrails?.maxActionsPerRun ?? 10, 1),
-      100
+      50
     ),
   };
 

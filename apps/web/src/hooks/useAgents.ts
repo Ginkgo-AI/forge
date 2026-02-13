@@ -87,6 +87,7 @@ type GenerateAgentResponse = {
         maxActionsPerRun: number;
       };
     };
+    availableTools?: { id: string; label: string }[];
   };
 };
 
