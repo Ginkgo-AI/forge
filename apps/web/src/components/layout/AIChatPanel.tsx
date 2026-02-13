@@ -140,7 +140,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
                 if (last.role === "assistant") {
-                  last.content += event.content;
+                  updated[updated.length - 1] = { ...last, content: last.content + event.content };
                 }
                 return updated;
               });
@@ -149,14 +149,15 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
             case "tool_call_start":
               setMessages((prev) => {
                 const updated = [...prev];
-                const last = updated[updated.length - 1];
+                const last = { ...updated[updated.length - 1] };
+                updated[updated.length - 1] = last;
                 if (last.role === "assistant") {
                   last.toolCalls = [
                     ...(last.toolCalls ?? []),
                     {
                       toolCallId: event.toolCallId,
                       toolName: event.toolName,
-                      status: "running",
+                      status: "running" as const,
                     },
                   ];
                 }
@@ -167,15 +168,14 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
             case "tool_call_result":
               setMessages((prev) => {
                 const updated = [...prev];
-                const last = updated[updated.length - 1];
+                const last = { ...updated[updated.length - 1] };
+                updated[updated.length - 1] = last;
                 if (last.role === "assistant" && last.toolCalls) {
-                  const tc = last.toolCalls.find(
-                    (t) => t.toolCallId === event.toolCallId
+                  last.toolCalls = last.toolCalls.map((tc) =>
+                    tc.toolCallId === event.toolCallId
+                      ? { ...tc, status: "done" as const, result: event.result }
+                      : tc
                   );
-                  if (tc) {
-                    tc.status = "done";
-                    tc.result = event.result;
-                  }
                 }
                 return updated;
               });
