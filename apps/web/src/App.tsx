@@ -1,19 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout.tsx";
-import { BoardPage } from "./pages/BoardPage.tsx";
-import { DashboardPage } from "./pages/DashboardPage.tsx";
-import { AgentsPage } from "./pages/AgentsPage.tsx";
-import { AutomationsPage } from "./pages/AutomationsPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
-import { SettingsPage } from "./pages/SettingsPage.tsx";
-import { DocumentsPage } from "./pages/DocumentsPage.tsx";
 import { useWorkspaces } from "./hooks/useWorkspaces.ts";
 import { useWorkspaceStore } from "./stores/workspace.ts";
 import { authClient } from "./lib/auth-client.ts";
 import { api } from "./lib/api.ts";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { Toaster } from "./components/ui/Toaster.tsx";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded pages
+const DashboardPage = lazy(() => import("./pages/DashboardPage.tsx").then((m) => ({ default: m.DashboardPage })));
+const BoardPage = lazy(() => import("./pages/BoardPage.tsx").then((m) => ({ default: m.BoardPage })));
+const AgentsPage = lazy(() => import("./pages/AgentsPage.tsx").then((m) => ({ default: m.AgentsPage })));
+const AutomationsPage = lazy(() => import("./pages/AutomationsPage.tsx").then((m) => ({ default: m.AutomationsPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.tsx").then((m) => ({ default: m.SettingsPage })));
+const DocumentsPage = lazy(() => import("./pages/DocumentsPage.tsx").then((m) => ({ default: m.DocumentsPage })));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="animate-spin text-forge-text-muted" size={24} />
+    </div>
+  );
+}
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -81,13 +92,13 @@ export function App() {
           }
         >
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/boards/:boardId" element={<BoardPage />} />
-          <Route path="/boards/:boardId/automations" element={<AutomationsPage />} />
-          <Route path="/agents" element={<AgentsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/docs" element={<DocumentsPage />} />
-          <Route path="/docs/:docId" element={<DocumentsPage />} />
+          <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+          <Route path="/boards/:boardId" element={<Suspense fallback={<PageLoader />}><BoardPage /></Suspense>} />
+          <Route path="/boards/:boardId/automations" element={<Suspense fallback={<PageLoader />}><AutomationsPage /></Suspense>} />
+          <Route path="/agents" element={<Suspense fallback={<PageLoader />}><AgentsPage /></Suspense>} />
+          <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+          <Route path="/docs" element={<Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense>} />
+          <Route path="/docs/:docId" element={<Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense>} />
         </Route>
       </Routes>
       <Toaster />
