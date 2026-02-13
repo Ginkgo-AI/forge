@@ -1,6 +1,8 @@
 import type { ErrorHandler } from "hono";
 import { AppError, ValidationError } from "../lib/errors.js";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 export const errorHandler: ErrorHandler = (err, c) => {
   // AppError subclasses (NotFoundError, ForbiddenError, ValidationError)
   if (err instanceof AppError) {
@@ -9,6 +11,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
     if (err instanceof ValidationError && err.details) {
       body.details = err.details;
     }
+    if (isDev && err.stack) body.stack = err.stack;
     return c.json(body, err.status as any);
   }
 
@@ -39,5 +42,8 @@ export const errorHandler: ErrorHandler = (err, c) => {
     "status" in err && typeof err.status === "number" ? err.status : 500;
   const message = status === 500 ? "Internal server error" : err.message;
 
-  return c.json({ error: message }, status as any);
+  const body: Record<string, unknown> = { error: message };
+  if (isDev && err.stack) body.stack = err.stack;
+
+  return c.json(body, status as any);
 };
