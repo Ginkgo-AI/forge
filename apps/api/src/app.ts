@@ -8,6 +8,7 @@ import { userRoutes } from "./routes/users.js";
 import { agentRoutes } from "./routes/agents.js";
 import { automationRoutes } from "./routes/automations.js";
 import { aiRoutes } from "./routes/ai.js";
+import { dashboardRoutes } from "./routes/dashboard.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -38,6 +39,7 @@ api.route("/users", userRoutes);
 api.route("/agents", agentRoutes);
 api.route("/automations", automationRoutes);
 api.route("/ai", aiRoutes);
+api.route("/dashboard", dashboardRoutes);
 
 app.route("/api/v1", api);
 

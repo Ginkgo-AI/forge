@@ -1,27 +1,33 @@
 import { Link } from "react-router-dom";
-import { Activity, Bot, Table2, Zap } from "lucide-react";
+import { Table2 } from "lucide-react";
 import { useBoards } from "../hooks/useBoards.ts";
 import { useWorkspaceStore } from "../stores/workspace.ts";
+import {
+  useDashboardStats,
+  useActivityFeed,
+  useActivityTimeline,
+  useBoardBreakdown,
+} from "../hooks/useDashboard.ts";
+import { StatsGrid } from "../components/dashboard/StatsGrid.tsx";
+import { ActivityTimeline } from "../components/dashboard/ActivityTimeline.tsx";
+import { BoardBreakdownChart } from "../components/dashboard/BoardBreakdownChart.tsx";
+import { ActivityFeed } from "../components/dashboard/ActivityFeed.tsx";
+import { AIReport } from "../components/dashboard/AIReport.tsx";
 
 export function DashboardPage() {
   const currentWorkspace = useWorkspaceStore((s) => s.currentWorkspace);
-  const { data: boardsData } = useBoards(currentWorkspace?.id);
+  const wsId = currentWorkspace?.id;
+
+  const { data: boardsData } = useBoards(wsId);
   const boards = boardsData?.data ?? [];
 
-  const stats = [
-    {
-      label: "Active Boards",
-      value: String(boards.length),
-      icon: Table2,
-      color: "text-blue-400",
-    },
-    { label: "Open Items", value: "--", icon: Activity, color: "text-green-400" },
-    { label: "Active Agents", value: "0", icon: Bot, color: "text-purple-400" },
-    { label: "Automations", value: "0", icon: Zap, color: "text-orange-400" },
-  ];
+  const { data: statsData, isLoading: statsLoading } = useDashboardStats(wsId);
+  const { data: activityData, isLoading: activityLoading } = useActivityFeed(wsId);
+  const { data: timelineData, isLoading: timelineLoading } = useActivityTimeline(wsId);
+  const { data: breakdownData, isLoading: breakdownLoading } = useBoardBreakdown(wsId);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-forge-text-muted mt-1">
@@ -30,22 +36,30 @@ export function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-forge-surface border border-forge-border rounded-lg p-5"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-forge-text-muted">{stat.label}</p>
-                <p className="text-3xl font-bold mt-1">{stat.value}</p>
-              </div>
-              <stat.icon size={28} className={stat.color} />
-            </div>
-          </div>
-        ))}
+      <StatsGrid stats={statsData?.data} isLoading={statsLoading} />
+
+      {/* Charts + Activity feed two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <ActivityTimeline
+            data={timelineData?.data}
+            isLoading={timelineLoading}
+          />
+          <BoardBreakdownChart
+            data={breakdownData?.data}
+            isLoading={breakdownLoading}
+          />
+        </div>
+        <div>
+          <ActivityFeed
+            data={activityData?.data}
+            isLoading={activityLoading}
+          />
+        </div>
       </div>
+
+      {/* AI Report */}
+      <AIReport workspaceId={wsId} />
 
       {/* Boards list */}
       {boards.length > 0 && (
@@ -72,27 +86,6 @@ export function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Recent activity placeholder */}
-      <div className="bg-forge-surface border border-forge-border rounded-lg p-5">
-        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-        <div className="space-y-3">
-          {[
-            "Sprint Planning Agent completed daily standup summary",
-            "3 items moved to 'Done' in Bug Tracker",
-            "New automation triggered: Client follow-up email sent",
-            "AI generated risk assessment for 'Q2 Launch' board",
-          ].map((activity, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 py-2 border-b border-forge-border last:border-0"
-            >
-              <div className="w-2 h-2 mt-2 rounded-full bg-forge-accent shrink-0" />
-              <p className="text-sm text-forge-text-muted">{activity}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

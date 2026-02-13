@@ -4,6 +4,7 @@ import { executeTool } from "../lib/ai-tools.js";
 import * as conversationService from "./conversation.service.js";
 import * as boardService from "./board.service.js";
 import * as itemService from "./item.service.js";
+import * as dashboardService from "./dashboard.service.js";
 import type { ConversationMessage, AgentToolCall } from "@forge/db";
 import type {
   NeutralMessage,
@@ -455,4 +456,44 @@ ${text}`;
   }
 
   return createdItems;
+}
+
+// Non-streaming: Generate a narrative workspace report
+export async function generateReport(
+  workspaceId: string,
+  userId: string,
+  providerId?: string,
+  model?: string
+) {
+  const provider = getProvider(providerId);
+  const resolvedModel = model || getDefaultModel(providerId);
+
+  const [stats, boardBreakdown] = await Promise.all([
+    dashboardService.getWorkspaceStats(workspaceId, userId),
+    dashboardService.getBoardBreakdown(workspaceId, userId),
+  ]);
+
+  const prompt = `You are generating a brief workspace status report. Based on the data below, write a concise narrative summary in markdown (3-5 paragraphs). Highlight key metrics, trends, and any areas that might need attention.
+
+Workspace Statistics:
+- Total boards: ${stats.totalBoards}
+- Total items: ${stats.totalItems}
+- Active agents: ${stats.activeAgents}
+- Active automations: ${stats.activeAutomations}
+- Automation runs this week: ${stats.automationRunsThisWeek}
+- Agent runs this week: ${stats.agentRunsThisWeek}
+- Items by status: ${JSON.stringify(stats.itemsByStatus)}
+
+Board Breakdown:
+${boardBreakdown.map((b) => `- ${b.boardName}: ${b.itemCount} items`).join("\n")}
+
+Write the report in a professional but accessible tone. Focus on actionable insights.`;
+
+  const { text } = await provider.complete({
+    model: resolvedModel,
+    messages: [{ role: "user", content: prompt }],
+    maxTokens: MAX_TOKENS,
+  });
+
+  return { report: text };
 }

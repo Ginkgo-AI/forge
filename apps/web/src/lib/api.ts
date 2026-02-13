@@ -180,6 +180,18 @@ export const api = {
   triggerAutomation: (id: string) =>
     request(`/automations/${id}/trigger`, { method: "POST" }),
 
+  // Dashboard
+  getDashboardStats: (workspaceId: string) =>
+    request(`/dashboard/stats?workspaceId=${workspaceId}`),
+  getActivityFeed: (workspaceId: string, limit = 20) =>
+    request(`/dashboard/activity?workspaceId=${workspaceId}&limit=${limit}`),
+  getActivityTimeline: (workspaceId: string, days = 14) =>
+    request(`/dashboard/timeline?workspaceId=${workspaceId}&days=${days}`),
+  getBoardBreakdown: (workspaceId: string) =>
+    request(`/dashboard/board-breakdown?workspaceId=${workspaceId}`),
+  generateReport: (data: { workspaceId: string; providerId?: string; model?: string }) =>
+    request("/dashboard/report", { method: "POST", body: JSON.stringify(data) }),
+
   // AI
   chatStream,
   chat: (data: { message: string; context?: Record<string, string>; conversationId?: string }) =>
