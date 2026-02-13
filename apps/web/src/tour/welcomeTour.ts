@@ -34,27 +34,27 @@ export const welcomeTourSteps: TourStep[] = [
     route: "/dashboard",
   },
   {
-    target: "sidebar-agents",
+    target: "agents-page",
     title: "AI Agents",
     content:
       "Build persistent AI agents that run on triggers or on demand.",
-    placement: "right",
-    route: "/dashboard",
+    placement: "bottom",
+    route: "/agents",
   },
   {
-    target: "sidebar-docs",
+    target: "docs-page",
     title: "Documents",
     content: "A markdown knowledge base for your team's documentation.",
-    placement: "right",
-    route: "/dashboard",
+    placement: "bottom",
+    route: "/docs",
   },
   {
-    target: "sidebar-settings",
+    target: "settings-page",
     title: "Settings",
     content:
       "Configure your workspace, AI providers, profile, and notifications.",
-    placement: "right",
-    route: "/dashboard",
+    placement: "bottom",
+    route: "/settings",
   },
   {
     target: "",

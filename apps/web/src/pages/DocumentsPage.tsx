@@ -86,7 +86,7 @@ export function DocumentsPage() {
   };
 
   return (
-    <div className="flex gap-0 -m-4 sm:-m-6 h-[calc(100vh-3rem)]">
+    <div className="flex gap-0 -m-4 sm:-m-6 h-[calc(100vh-3rem)]" data-tour="docs-page">
       {/* Document tree sidebar */}
       <div className="w-60 shrink-0 border-r border-forge-border bg-forge-surface flex flex-col">
         <div className="flex items-center justify-between p-3 border-b border-forge-border">

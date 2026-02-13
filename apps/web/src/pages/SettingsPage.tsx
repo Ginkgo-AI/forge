@@ -19,7 +19,7 @@ export function SettingsPage() {
   const ActiveComponent = tabs.find((t) => t.id === activeTab)!.component;
 
   return (
-    <div>
+    <div data-tour="settings-page">
       <h1 className="text-xl font-bold mb-6">Settings</h1>
 
       <div className="flex flex-col sm:flex-row gap-6">
