@@ -17,6 +17,7 @@ const PREFIXES = {
   team: "tm",
   dependency: "dep",
   run: "run",
+  document: "doc",
 } as const;
 
 type EntityPrefix = keyof typeof PREFIXES;

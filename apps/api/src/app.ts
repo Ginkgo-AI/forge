@@ -11,6 +11,7 @@ import { automationRoutes } from "./routes/automations.js";
 import { aiRoutes } from "./routes/ai.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { settingsRoutes } from "./routes/settings.js";
+import { documentRoutes } from "./routes/documents.js";
 import { authRoutes } from "./routes/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -53,6 +54,7 @@ api.route("/automations", automationRoutes);
 api.route("/ai", aiRoutes);
 api.route("/dashboard", dashboardRoutes);
 api.route("/settings", settingsRoutes);
+api.route("/documents", documentRoutes);
 
 app.route("/api/v1", api);
 

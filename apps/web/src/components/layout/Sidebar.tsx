@@ -10,6 +10,7 @@ import {
   Loader2,
   MoreHorizontal,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { useBoards, useDeleteBoard } from "../../hooks/useBoards.ts";
 import { useWorkspaceStore } from "../../stores/workspace.ts";
@@ -19,6 +20,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog.tsx";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Agents", href: "/agents", icon: Bot },
+  { name: "Docs", href: "/docs", icon: FileText },
 ];
 
 type SidebarProps = {
