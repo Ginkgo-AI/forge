@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { AgentsPage } from "./pages/AgentsPage.tsx";
 import { AutomationsPage } from "./pages/AutomationsPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
+import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { useWorkspaces } from "./hooks/useWorkspaces.ts";
 import { useWorkspaceStore } from "./stores/workspace.ts";
 import { authClient } from "./lib/auth-client.ts";
@@ -83,6 +84,7 @@ export function App() {
           <Route path="/boards/:boardId" element={<BoardPage />} />
           <Route path="/boards/:boardId/automations" element={<AutomationsPage />} />
           <Route path="/agents" element={<AgentsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
       <Toaster />

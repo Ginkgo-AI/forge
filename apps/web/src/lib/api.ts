@@ -201,6 +201,30 @@ export const api = {
   extractItems: (data: { text: string; boardId: string; providerId?: string; model?: string }) =>
     request("/ai/extract-items", { method: "POST", body: JSON.stringify(data) }),
   getProviders: () => request<{ data: ProviderInfo[] }>("/ai/providers"),
+
+  // Settings
+  getWorkspaceSettings: (workspaceId: string) =>
+    request(`/settings/workspace/${workspaceId}`),
+  updateWorkspaceSettings: (workspaceId: string, data: { name?: string; description?: string }) =>
+    request(`/settings/workspace/${workspaceId}`, { method: "PATCH", body: JSON.stringify(data) }),
+  getAISettings: () => request("/settings/ai"),
+
+  // User profile
+  updateProfile: (data: { name?: string; avatarUrl?: string | null }) =>
+    request("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    request("/users/me/password", { method: "POST", body: JSON.stringify(data) }),
+
+  // Documents
+  listDocuments: (workspaceId: string) =>
+    request(`/documents?workspaceId=${workspaceId}`),
+  getDocument: (id: string) => request(`/documents/${id}`),
+  createDocument: (data: { workspaceId: string; title: string; content?: string; parentDocId?: string }) =>
+    request("/documents", { method: "POST", body: JSON.stringify(data) }),
+  updateDocument: (id: string, data: { title?: string; content?: string }) =>
+    request(`/documents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteDocument: (id: string) =>
+    request(`/documents/${id}`, { method: "DELETE" }),
 };
 
 export type ProviderModel = {
