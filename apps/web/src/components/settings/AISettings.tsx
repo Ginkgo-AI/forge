@@ -46,18 +46,19 @@ export function AISettings() {
 
   const handleTest = async (providerId: string) => {
     setTesting(providerId);
+    const displayName = providers.find((p) => p.providerId === providerId)?.displayName ?? providerId;
     try {
       const res = await fetch("/api/v1/ai/providers", { credentials: "include" });
       if (res.ok) {
         setTestResults((prev) => ({ ...prev, [providerId]: true }));
-        toast.success(`${providerId} connection successful`);
+        toast.success(`${displayName} connection successful`);
       } else {
         setTestResults((prev) => ({ ...prev, [providerId]: false }));
-        toast.error(`${providerId} connection failed`);
+        toast.error(`${displayName} connection failed`);
       }
     } catch {
       setTestResults((prev) => ({ ...prev, [providerId]: false }));
-      toast.error(`${providerId} connection failed`);
+      toast.error(`${displayName} connection failed`);
     }
     setTesting(null);
   };
