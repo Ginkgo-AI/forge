@@ -160,6 +160,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ prompt }),
     }),
+  generateAgent: (data: { description: string; workspaceId: string; providerId?: string; model?: string }) =>
+    request("/ai/generate-agent", { method: "POST", body: JSON.stringify(data) }),
 
   // Automations
   listAutomations: (boardId: string) =>

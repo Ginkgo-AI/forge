@@ -130,4 +130,32 @@ aiRoutes.post(
   }
 );
 
+// Generate agent configuration from natural language
+aiRoutes.post(
+  "/generate-agent",
+  zValidator(
+    "json",
+    z.object({
+      description: z.string().min(10).max(5000),
+      workspaceId: z.string(),
+      providerId: z.string().optional(),
+      model: z.string().optional(),
+    })
+  ),
+  async (c) => {
+    const body = c.req.valid("json");
+    const userId = c.get("userId");
+
+    const agentConfig = await aiService.generateAgentConfig(
+      body.description,
+      body.workspaceId,
+      userId,
+      body.providerId,
+      body.model
+    );
+
+    return c.json({ data: { agentConfig } });
+  }
+);
+
 export { aiRoutes };
