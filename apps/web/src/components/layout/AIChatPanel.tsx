@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api.ts";
 import type { ChatSSEEvent, ProviderInfo } from "../../lib/api.ts";
 import { useWorkspaceStore } from "../../stores/workspace.ts";
+import { useAIPreferencesStore } from "../../stores/ai.ts";
 
 type ToolCall = {
   toolCallId: string;
@@ -74,6 +75,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
 
   const workspaceId = useWorkspaceStore((s) => s.currentWorkspace?.id);
   const currentBoardId = useWorkspaceStore((s) => s.currentBoardId);
+  const { preferredProviderId, preferredModelId, setPreferredModel } = useAIPreferencesStore();
 
   const { data: providersData } = useQuery({
     queryKey: ["ai-providers"],
@@ -85,13 +87,16 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
     ? flattenProviderModels(providersData.data)
     : [];
 
-  // Set default selection once providers load
+  // Set default selection once providers load — use store preference if available
   useEffect(() => {
     if (modelOptions.length > 0 && !selectedModel) {
-      const defaultOption = modelOptions.find((o) => o.isDefault) || modelOptions[0];
+      const preferred = preferredProviderId && preferredModelId
+        ? modelOptions.find((o) => o.providerId === preferredProviderId && o.modelId === preferredModelId)
+        : null;
+      const defaultOption = preferred || modelOptions.find((o) => o.isDefault) || modelOptions[0];
       setSelectedModel(defaultOption);
     }
-  }, [modelOptions, selectedModel]);
+  }, [modelOptions, selectedModel, preferredProviderId, preferredModelId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -227,9 +232,12 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 const option = modelOptions.find(
                   (o) => `${o.providerId}:${o.modelId}` === e.target.value
                 );
-                if (option) setSelectedModel(option);
+                if (option) {
+                  setSelectedModel(option);
+                  setPreferredModel(option.providerId, option.modelId);
+                }
               }}
-              className="appearance-none bg-forge-bg border border-forge-border rounded px-2 py-0.5 pr-6 text-xs text-forge-text-muted cursor-pointer focus:outline-none focus:border-forge-accent"
+              className="appearance-none bg-forge-accent/15 border border-forge-accent/40 rounded-md px-3 py-1 pr-7 text-xs font-medium text-forge-accent cursor-pointer focus:outline-none focus:border-forge-accent hover:bg-forge-accent/25 transition-colors"
             >
               {modelOptions.map((o) => (
                 <option
@@ -242,7 +250,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
             </select>
             <ChevronDown
               size={12}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-forge-text-muted"
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-forge-accent"
             />
           </div>
         )}
