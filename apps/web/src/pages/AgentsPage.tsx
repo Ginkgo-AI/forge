@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { useWorkspaceStore } from "../stores/workspace.ts";
 import {
@@ -19,6 +20,7 @@ import {
   useDeleteAgent,
 } from "../hooks/useAgents.ts";
 import { CreateAgentModal } from "../components/agents/CreateAgentModal.tsx";
+import { AgentBuilderWizard } from "../components/agents/AgentBuilderWizard.tsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.tsx";
 import type { Agent, AgentRun } from "@forge/shared";
 
@@ -61,11 +63,11 @@ function RunHistoryRow({ run }: { run: AgentRun }) {
       <span>
         {run.createdAt
           ? new Date(run.createdAt).toLocaleString(undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
           : "—"}
       </span>
     </div>
@@ -80,6 +82,7 @@ export function AgentsPage() {
   const deleteAgent = useDeleteAgent();
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
@@ -118,13 +121,25 @@ export function AgentsPage() {
             Persistent AI agents that automate your workflows
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="px-4 py-2 text-sm rounded-md bg-forge-accent hover:bg-forge-accent-hover text-white transition-colors flex items-center gap-2"
-        >
-          <Plus size={16} />
-          Create Agent
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBuilder(true)}
+            className="px-4 py-2 text-sm rounded-md text-white transition-all flex items-center gap-2"
+            style={{
+              background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+            }}
+          >
+            <Sparkles size={16} />
+            AI Builder
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 text-sm rounded-md border border-forge-border hover:bg-forge-surface-hover text-forge-text transition-colors flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Create Manual
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -156,9 +171,8 @@ export function AgentsPage() {
                     <div className="flex items-center gap-3">
                       <h3 className="font-semibold truncate">{agent.name}</h3>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
-                          statusStyles[agent.status]
-                        }`}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${statusStyles[agent.status]
+                          }`}
                       >
                         {agent.status}
                       </span>
@@ -274,6 +288,7 @@ export function AgentsPage() {
       )}
 
       <CreateAgentModal open={showCreate} onClose={() => setShowCreate(false)} />
+      <AgentBuilderWizard open={showBuilder} onClose={() => setShowBuilder(false)} />
 
       <ConfirmDialog
         open={!!deleteTarget}

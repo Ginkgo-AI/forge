@@ -19,16 +19,16 @@ export type SSEEvent =
   | { type: "text_delta"; content: string }
   | { type: "tool_call_start"; toolName: string; toolCallId: string }
   | {
-      type: "tool_call_result";
-      toolCallId: string;
-      toolName: string;
-      result: unknown;
-    }
+    type: "tool_call_result";
+    toolCallId: string;
+    toolName: string;
+    result: unknown;
+  }
   | {
-      type: "done";
-      conversationId: string;
-      toolCalls: AgentToolCall[];
-    }
+    type: "done";
+    conversationId: string;
+    toolCalls: AgentToolCall[];
+  }
   | { type: "error"; error: string };
 
 type StreamChatParams = {
@@ -405,10 +405,9 @@ export async function extractItems(
   const columnInfo = board.columns
     .map(
       (c) =>
-        `- "${c.title}" (id: ${c.id}, type: ${c.type}${
-          c.type === "status" && c.config
-            ? `, status keys: ${Object.keys(c.config.labels || {}).join(", ")}`
-            : ""
+        `- "${c.title}" (id: ${c.id}, type: ${c.type}${c.type === "status" && c.config
+          ? `, status keys: ${Object.keys(c.config.labels || {}).join(", ")}`
+          : ""
         })`
     )
     .join("\n");
@@ -496,4 +495,112 @@ Write the report in a professional but accessible tone. Focus on actionable insi
   });
 
   return { report: text };
+}
+
+// Available tools with descriptions for AI agent generation
+const AGENT_TOOL_CATALOG = [
+  { id: "list_boards", description: "List all boards in the workspace" },
+  { id: "get_board", description: "Get details of a specific board including columns and groups" },
+  { id: "create_board", description: "Create a new board in the workspace" },
+  { id: "add_column", description: "Add a column to a board" },
+  { id: "add_group", description: "Add a group to a board" },
+  { id: "list_items", description: "List items in a board, optionally filtered by group" },
+  { id: "get_item", description: "Get details of a specific item" },
+  { id: "create_item", description: "Create a new item in a board" },
+  { id: "update_item", description: "Update an existing item's name, group, or column values" },
+  { id: "delete_item", description: "Delete an item" },
+  { id: "add_item_update", description: "Add a comment/update to an item" },
+  { id: "list_workspace_members", description: "List all members of the workspace" },
+];
+
+const VALID_TOOL_IDS = new Set(AGENT_TOOL_CATALOG.map((t) => t.id));
+
+export function getAgentToolCatalog() {
+  return AGENT_TOOL_CATALOG.map((t) => ({ id: t.id, label: t.description }));
+}
+
+// Non-streaming: Generate agent configuration from natural language
+export async function generateAgentConfig(
+  description: string,
+  workspaceId: string,
+  providerId?: string,
+  model?: string
+) {
+  const provider = getProvider(providerId);
+  const resolvedModel = model || getDefaultModel(providerId);
+
+  const toolListStr = AGENT_TOOL_CATALOG.map(
+    (t) => `  - "${t.id}": ${t.description}`
+  ).join("\n");
+
+  const prompt = `You are an expert at configuring AI agents for a work management platform called Forge. Based on the user's description, generate a complete agent configuration as a JSON object.
+
+The JSON object MUST have these fields:
+- "name": A short, descriptive agent name (max 60 chars)
+- "description": A one-sentence summary of what the agent does
+- "systemPrompt": A detailed system prompt (200-500 words) that instructs the agent on its specific role, behavior, and any rules it should follow. Be specific and thorough.
+- "tools": An array of tool IDs from the list below that the agent needs. Only include tools the agent actually needs.
+- "triggerType": Either "manual" (user runs it on demand) or "event" (runs when something happens in the workspace)
+- "eventType": If triggerType is "event", one of: "item_created", "item_updated", "column_value_changed", "item_deleted". Omit if manual.
+- "guardrails": An object with:
+  - "requireApproval": boolean — true if the agent performs destructive or high-impact actions
+  - "maxActionsPerRun": number between 1-50, based on complexity of the task
+
+Available tools (ONLY use IDs from this list):
+${toolListStr}
+
+Respond with ONLY valid JSON. No markdown code fences, no conversational text, no explanations.
+
+Workspace ID: ${workspaceId}
+User's description: ${description}`;
+
+  const { text } = await provider.complete({
+    model: resolvedModel,
+    messages: [{ role: "user", content: prompt }],
+    maxTokens: MAX_TOKENS,
+  });
+
+  // Parse and validate the AI response
+  let config;
+  try {
+    config = JSON.parse(text);
+  } catch {
+    // Fallback: try to extract JSON from the response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      config = JSON.parse(jsonMatch[0]);
+    } else {
+      // Return a safe default if AI output is unparseable
+      return {
+        name: "New Agent",
+        description: description.slice(0, 200),
+        systemPrompt: `You are an AI agent. Your task: ${description}`,
+        tools: ["list_boards", "list_items"],
+        triggerType: "manual" as const,
+        guardrails: { requireApproval: true, maxActionsPerRun: 10 },
+      };
+    }
+  }
+
+  // Validate and sanitize tools — remove any hallucinated tool IDs
+  if (Array.isArray(config.tools)) {
+    config.tools = config.tools.filter((t: string) => VALID_TOOL_IDS.has(t));
+  } else {
+    config.tools = [];
+  }
+
+  // Ensure required fields exist
+  config.name = config.name || "New Agent";
+  config.description = config.description || "";
+  config.systemPrompt = config.systemPrompt || `You are an AI agent. Your task: ${description}`;
+  config.triggerType = config.triggerType === "event" ? "event" : "manual";
+  config.guardrails = {
+    requireApproval: config.guardrails?.requireApproval ?? true,
+    maxActionsPerRun: Math.min(
+      Math.max(config.guardrails?.maxActionsPerRun ?? 10, 1),
+      50
+    ),
+  };
+
+  return config;
 }

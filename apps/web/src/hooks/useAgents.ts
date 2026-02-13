@@ -72,3 +72,32 @@ export function useTriggerAgent() {
     },
   });
 }
+
+type GenerateAgentResponse = {
+  data: {
+    agentConfig: {
+      name: string;
+      description: string;
+      systemPrompt: string;
+      tools: string[];
+      triggerType: "manual" | "event";
+      eventType?: string;
+      guardrails: {
+        requireApproval: boolean;
+        maxActionsPerRun: number;
+      };
+    };
+    availableTools?: { id: string; label: string }[];
+  };
+};
+
+export function useGenerateAgent() {
+  return useMutation<
+    GenerateAgentResponse,
+    Error,
+    { description: string; workspaceId: string; providerId?: string; model?: string }
+  >({
+    mutationFn: (data) =>
+      api.generateAgent(data) as Promise<GenerateAgentResponse>,
+  });
+}
