@@ -21,7 +21,11 @@ const navigation = [
   { name: "Agents", href: "/agents", icon: Bot },
 ];
 
-export function Sidebar() {
+type SidebarProps = {
+  onClose?: () => void;
+};
+
+export function Sidebar({ onClose }: SidebarProps) {
   const location = useLocation();
   const currentWorkspace = useWorkspaceStore((s) => s.currentWorkspace);
   const { data: boardsData, isLoading } = useBoards(currentWorkspace?.id);
@@ -58,6 +62,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               to={item.href}
+              onClick={onClose}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                 active
                   ? "bg-forge-accent/15 text-forge-accent"
@@ -99,6 +104,7 @@ export function Sidebar() {
                 <div key={board.id} className="relative group/board">
                   <Link
                     to={`/boards/${board.id}`}
+                    onClick={onClose}
                     className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                       active
                         ? "bg-forge-accent/15 text-forge-accent"
@@ -142,6 +148,7 @@ export function Sidebar() {
       <div className="p-3 border-t border-forge-border">
         <Link
           to="/settings"
+          onClick={onClose}
           className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-forge-text-muted hover:bg-forge-surface-hover hover:text-forge-text transition-colors"
         >
           <Settings size={18} />

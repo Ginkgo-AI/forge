@@ -172,7 +172,7 @@ export function BoardPage() {
             return (
               <div
                 key={group.id}
-                className="bg-forge-surface border border-forge-border rounded-lg overflow-hidden"
+                className="bg-forge-surface border border-forge-border rounded-lg overflow-x-auto"
               >
                 {/* Group header */}
                 <div
@@ -196,9 +196,9 @@ export function BoardPage() {
                 </div>
 
                 {/* Column headers */}
-                <div className="flex items-center border-b border-forge-border bg-forge-surface-hover">
+                <div className="flex items-center border-b border-forge-border bg-forge-surface-hover min-w-fit">
                   <div className="w-8 shrink-0" />
-                  <div className="flex-1 min-w-[250px] px-3 py-2 text-xs font-medium text-forge-text-muted uppercase tracking-wider">
+                  <div className="w-[250px] shrink-0 px-3 py-2 text-xs font-medium text-forge-text-muted uppercase tracking-wider sticky left-0 bg-forge-surface-hover z-10">
                     Item
                   </div>
                   {columns.map((col) => (
@@ -216,7 +216,7 @@ export function BoardPage() {
                 {groupItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center border-b border-forge-border last:border-0 hover:bg-forge-surface-hover/50 transition-colors group"
+                    className="flex items-center border-b border-forge-border last:border-0 hover:bg-forge-surface-hover/50 transition-colors group min-w-fit"
                   >
                     <div className="w-8 shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <GripVertical
@@ -225,7 +225,7 @@ export function BoardPage() {
                       />
                     </div>
                     <div
-                      className="flex-1 min-w-[250px] px-3 py-2.5 text-sm font-medium cursor-pointer hover:text-forge-accent transition-colors"
+                      className="w-[250px] shrink-0 px-3 py-2.5 text-sm font-medium cursor-pointer hover:text-forge-accent transition-colors sticky left-0 bg-forge-surface z-10"
                       onClick={() => setSelectedItemId(item.id)}
                     >
                       {item.name}

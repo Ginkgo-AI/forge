@@ -65,7 +65,7 @@ export function ItemDetailPanel({
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative w-full max-w-lg bg-forge-surface border-l border-forge-border h-full overflow-y-auto shadow-xl animate-in slide-in-from-right">
+      <div className="relative w-full max-w-full sm:max-w-lg bg-forge-surface border-l border-forge-border h-full overflow-y-auto shadow-xl animate-in slide-in-from-right">
         {/* Header */}
         <div className="sticky top-0 bg-forge-surface border-b border-forge-border px-5 py-4 flex items-center justify-between z-10">
           <h2 className="text-base font-semibold truncate">Item Details</h2>
