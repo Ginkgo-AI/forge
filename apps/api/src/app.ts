@@ -10,6 +10,7 @@ import { agentRoutes } from "./routes/agents.js";
 import { automationRoutes } from "./routes/automations.js";
 import { aiRoutes } from "./routes/ai.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { authRoutes } from "./routes/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -35,6 +36,9 @@ app.use("*", bodyLimit({ maxSize: 1024 * 1024 })); // 1MB
 app.get("/health", (c) =>
   c.json({ status: "ok", service: "forge-api", timestamp: new Date().toISOString() })
 );
+
+// Auth routes (public — mounted before requireAuth)
+app.route("/api/auth", authRoutes);
 
 // API routes (all require auth)
 const api = new Hono();

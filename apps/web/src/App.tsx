@@ -1,13 +1,42 @@
 import { useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout.tsx";
 import { BoardPage } from "./pages/BoardPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { AgentsPage } from "./pages/AgentsPage.tsx";
 import { AutomationsPage } from "./pages/AutomationsPage.tsx";
+import { LoginPage } from "./pages/LoginPage.tsx";
 import { useWorkspaces } from "./hooks/useWorkspaces.ts";
 import { useWorkspaceStore } from "./stores/workspace.ts";
+import { authClient } from "./lib/auth-client.ts";
 import { api } from "./lib/api.ts";
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const { data: session, isPending } = authClient.useSession();
+  const isDev = import.meta.env.DEV;
+
+  useEffect(() => {
+    // In dev mode, skip auth guard (dev auto-login handles it)
+    if (isDev) return;
+    if (!isPending && !session) {
+      navigate("/login", { replace: true });
+    }
+  }, [session, isPending, isDev, navigate]);
+
+  // In dev mode, always render children
+  if (isDev) return <>{children}</>;
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-forge-bg">
+        <div className="text-forge-text-muted text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+  return <>{children}</>;
+}
 
 export function App() {
   const { data: wsData } = useWorkspaces();
@@ -37,7 +66,15 @@ export function App() {
 
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<LoginPage />} />
+      <Route
+        element={
+          <AuthGuard>
+            <AppLayout />
+          </AuthGuard>
+        }
+      >
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/boards/:boardId" element={<BoardPage />} />

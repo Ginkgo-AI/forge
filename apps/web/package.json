@@ -11,6 +11,7 @@
   "dependencies": {
     "@forge/shared": "workspace:*",
     "@tanstack/react-query": "^5.60.0",
+    "better-auth": "^1.4.18",
     "lucide-react": "^0.460.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

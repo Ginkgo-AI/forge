@@ -16,5 +16,16 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "pnpm": {
+    "overrides": {
+      "drizzle-orm": "0.38.4",
+      "better-auth>drizzle-orm": "0.38.4"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "kysely"
+      ]
+    }
   }
 }
